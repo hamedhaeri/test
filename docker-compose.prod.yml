@@ -1,0 +1,6 @@
+version: "3.6"
+services:
+  app:
+    environment:
+      - WEB_CONCURRENCY=2
+    command: ["/opt/app/bin/serve_django.sh"]

@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: docker-compose build -q
+
+      - name: Run app
+        run: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d web app
+
+      - name: Check app is being served through nginx
+        run: nc -zv localhost 8080
+
+      - uses: anchore/scan-action@v3
+        with:
+          image: "django-in-docker-starter_app:latest"
+          fail-build: true
+          output-format: "table"
+          severity-cutoff: "medium"
+
+      - name: Teardown
+        run: docker-compose down

@@ -1,0 +1,39 @@
+version: "3.6"
+services:
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+  app:
+    build: .
+    environment:
+      - DB_SERVICE_HOST=db
+      - DB_SERVICE_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/opt/app:cached
+      - app_statics:/var/www/static
+
+  web:
+    build:
+      context: web
+    depends_on:
+      - app
+    ports:
+      - "8080:80"
+    volumes:
+      - app_statics:/var/www/static
+
+volumes:
+  app_statics:
+  postgres_data:
